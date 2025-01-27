@@ -12,7 +12,6 @@ enum class Wheel {
     SIX
 };
 
-// Base class for Car
 class Car {
 private:
     string registrationNumber;
@@ -21,8 +20,10 @@ private:
     Wheel wheel;
 
 public:
+   
     Car(string registrationNumber, string brand, string color, Wheel wheel)
         : registrationNumber(registrationNumber), brand(brand), color(color), wheel(wheel) {}
+
 
     string getRegistrationNumber() {
         return registrationNumber;
@@ -33,12 +34,12 @@ public:
     string getColor() {
         return color;
     }
-    Wheel getWheel() {
-        return wheel;
+    virtual Wheel getWheel() {
+        return wheel;  
     }
+   
 };
 
-// Derived Car classes
 class TwoWheelerCar : public Car {
 public:
     TwoWheelerCar(string registrationNumber, string brand, string color)
@@ -57,172 +58,154 @@ public:
         : Car(registrationNumber, brand, color, Wheel::SIX) {}
 };
 
-// Spot base class
-class Spot {
-private:
+class Spot{
+    private:
     string spotNumber;
     Wheel wheel;
     bool status;
     Car *spotOccupiedCar;
     int reservedHour;
-
-public:
-    Spot(string spotNumber, Wheel wheel)
-        : spotNumber(spotNumber), wheel(wheel), reservedHour(0), status(false), spotOccupiedCar(nullptr) {}
-
-    Wheel getWheel() {
+    public:
+    Spot(string spotNumber,Wheel wheel):spotNumber(spotNumber),wheel(wheel),reservedHour(0),status(false){};
+    Wheel getWheel(){
         return wheel;
     }
-    string getSpotNumber() {
-        return spotNumber;
-    }
-    bool getStatus() {
-        return status;
-    }
-    Car* getCar() {
-        return spotOccupiedCar;
-    }
-    int getReservedHour() {
-        return reservedHour;
-    }
-    void reserveSpot(Car &car, int hour) {
+    void reserveSpot(Car& car,int hour){
         spotOccupiedCar = &car;
         status = true;
-        reservedHour = hour;
+        reservedHour  = hour;
     }
-    void releaseSpot() {
-        spotOccupiedCar = nullptr;
+      string getSpotNumber(){
+        return spotNumber;
+    }
+    bool getStatus(){
+        return status;
+    }
+    Car* getCar(){
+        return spotOccupiedCar;
+    }
+    int getReservedHour(){
+        return reservedHour;
+    }
+    void releaseSpot(){
+        spotOccupiedCar = NULL;
         status = false;
         reservedHour = 0;
     }
     virtual double getPricePerHour() = 0;
 };
-
-// Derived Spot classes
-class TwoWheelerSpot : public Spot {
-public:
-    TwoWheelerSpot(string spotNumber) : Spot(spotNumber, Wheel::TWO) {}
-    double getPricePerHour() override {
+class TwoWheelerSpot:public Spot{
+    public:
+    TwoWheelerSpot(string spotNumber):Spot(spotNumber,Wheel::TWO){}
+    double getPricePerHour(){
         return TwoWheelerPricePerHour;
     }
 };
-
-class FourWheelerSpot : public Spot {
-public:
-    FourWheelerSpot(string spotNumber) : Spot(spotNumber, Wheel::FOUR) {}
-    double getPricePerHour() override {
+class FourWheelerSpot:public Spot{
+    public:
+    FourWheelerSpot(string spotNumber):Spot(spotNumber,Wheel::FOUR){}
+    double getPricePerHour(){
         return FourWheelerPricePerHour;
     }
 };
-
-class SixWheelerSpot : public Spot {
-public:
-    SixWheelerSpot(string spotNumber) : Spot(spotNumber, Wheel::SIX) {}
-    double getPricePerHour() override {
+class SixWheelerSpot:public Spot{
+    public:
+    SixWheelerSpot(string spotNumber):Spot(spotNumber,Wheel::SIX){}
+    double getPricePerHour(){
         return SixWheelerPricePerHour;
     }
 };
-
-// Utility for converting string to Wheel enum
-class EnumConverter {
-public:
-    Wheel convert(string wheelInfo) {
-        if (wheelInfo == "TWO") return Wheel::TWO;
-        else if (wheelInfo == "FOUR") return Wheel::FOUR;
-        else if (wheelInfo == "SIX") return Wheel::SIX;
-        throw invalid_argument("Invalid wheel type");
-    }
+class EnumConverter{
+       public:
+      Wheel convert(string wheelInfo){
+        if(wheelInfo == "TWO") return Wheel::TWO;
+        else if(wheelInfo == "FOUR") return Wheel::FOUR;
+        else if(wheelInfo == "SIX") return Wheel::SIX;
+      }
 };
 
-// Factories for creating cars and spots
-class CarFactory {
+class CarFactory{
     EnumConverter converter;
-
-public:
-    Car* CreateCar(string registrationNumber, string brand, string color, string wheels) {
+    public:
+    Car* CreateCar(string registrationNumber, string brand, string color,string wheels){
         Wheel currentWheels = converter.convert(wheels);
-        switch (currentWheels) {
+        switch(currentWheels){
             case Wheel::TWO:
-                return new TwoWheelerCar(registrationNumber, brand, color);
+                return new TwoWheelerCar(registrationNumber,brand,color);
+                break;
             case Wheel::FOUR:
-                return new FourWheelerCar(registrationNumber, brand, color);
+                return new FourWheelerCar(registrationNumber,brand,color);
+                break;
             case Wheel::SIX:
-                return new SixWheelerCar(registrationNumber, brand, color);
+                return new SixWheelerCar(registrationNumber,brand,color);
+                break;
         }
-        return nullptr;
     }
 };
-
-class SpotFactory {
+class SpotFactory{
     EnumConverter converter;
-
-public:
-    Spot* CreateSpot(string spotNumber, string wheels) {
+    public:
+    Spot* CreateSpot(string spotNumber,string wheels){
         Wheel currentWheels = converter.convert(wheels);
-        switch (currentWheels) {
+        switch(currentWheels){
             case Wheel::TWO:
                 return new TwoWheelerSpot(spotNumber);
+                break;
             case Wheel::FOUR:
                 return new FourWheelerSpot(spotNumber);
+                break;
             case Wheel::SIX:
                 return new SixWheelerSpot(spotNumber);
+                break;
         }
-        return nullptr;
     }
 };
 
-// Parking Manager
-class ParkingManager {
-private:
-    vector<unique_ptr<Car>> CarStorage;
-    vector<unique_ptr<Spot>> SpotStorage;
+class ParkingManager{
+    private:
+    vector<Car*> CarStorage;
+    vector<Spot*> SpotStorage;
     CarFactory carCreator;
     SpotFactory spotCreator;
-
-public:
-    ParkingManager() {
-        cout << "Welcome to Car Parking Management System" << endl;
+    public:
+    ParkingManager(){
+        cout<<"Welome to Car Parking Management System"<<endl;
     }
-
-    void addSpot(string spotNumber, string wheels) {
-        unique_ptr<Spot> currentSpot(spotCreator.CreateSpot(spotNumber, wheels));
-        SpotStorage.push_back(move(currentSpot));
+    void addSpot(string spotNumber,string wheels){
+          Spot *currentSpot = spotCreator.CreateSpot(spotNumber,wheels);
+          SpotStorage.push_back(currentSpot);
     }
-
-    void reserveSpot(string spotNumber, string registrationNumber, string brand, string color, string wheels, int hour) {
-        unique_ptr<Car> currentCar(carCreator.CreateCar(registrationNumber, brand, color, wheels));
-        for (auto &spot : SpotStorage) {
-            if (spot->getSpotNumber() == spotNumber && !spot->getStatus()) {
-                spot->reserveSpot(*currentCar, hour);
-                CarStorage.push_back(move(currentCar));
-                return;
+    void reserveSpot(string spotNumber,string registrationNumber, string brand, string color,string wheels,int hour){
+            Car* currentCar = carCreator.CreateCar(registrationNumber,brand,color,wheels);
+            CarStorage.push_back(currentCar);
+            for(Spot* spots:SpotStorage){
+                if(spotNumber == spots->getSpotNumber()){
+                    spots->reserveSpot(*currentCar,hour);
+                }
             }
-        }
-        cout << "Spot not available for reservation" << endl;
     }
-
-    double releaseSpotAndBill(string registrationNumber) {
-        for (auto &spot : SpotStorage) {
-            if (spot->getStatus() && spot->getCar()->getRegistrationNumber() == registrationNumber) {
-                double price = spot->getPricePerHour() * spot->getReservedHour();
-                spot->releaseSpot();
-                return price;
+    double releaseSpotAndBill(string registrationNumber){
+        double price;
+           for(Spot* spots:SpotStorage){
+                if(spots->getStatus()){
+                    Car* currentCar = spots->getCar();
+                    if(currentCar->getRegistrationNumber() == registrationNumber){
+                     price = spots->getPricePerHour()*spots->getReservedHour();
+                    spots->releaseSpot();
+                    }
+                }
             }
-        }
-        cout << "Car not found" << endl;
-        return 0.0;
+        return price;
     }
-
-    void printUnreservedSpotNumber(string wheels) {
+    void printUnreservedSpotNumber(string wheels){
         EnumConverter converter;
         Wheel wheel = converter.convert(wheels);
-        for (auto &spot : SpotStorage) {
-            if (!spot->getStatus() && spot->getWheel() == wheel) {
-                cout << spot->getSpotNumber() << endl;
+         for(Spot* spots:SpotStorage){
+                if(spots->getStatus()==false&&spots->getWheel()==wheel){
+                    cout<<spots->getSpotNumber()<<endl;
+                }
             }
-        }
     }
-
     void printReservedSpotsDetails() {
         for (auto &spot : SpotStorage) {
             if (spot->getStatus()) {
@@ -236,3 +219,40 @@ public:
         }
     }
 };
+int main() {
+    // Create a ParkingManager instance
+    ParkingManager parkingManager;
+
+    // Add parking spots
+    parkingManager.addSpot("A1", "TWO");
+    parkingManager.addSpot("A2", "FOUR");
+    parkingManager.addSpot("A3", "SIX");
+    parkingManager.addSpot("B1", "FOUR");
+
+    // Reserve spots
+    parkingManager.reserveSpot("A1", "TN01AA1234", "Yamaha", "Blue", "TWO", 3);
+    parkingManager.reserveSpot("A2", "KA05BB5678", "Toyota", "Black", "FOUR", 5);
+
+    // Print unreserved spots for "FOUR" wheeler
+    cout << "Unreserved spots for FOUR wheeler:" << endl;
+    parkingManager.printUnreservedSpotNumber("FOUR");
+
+    // Print reserved spots details
+    cout << "\nReserved spots details:" << endl;
+    parkingManager.printReservedSpotsDetails();
+
+    // Release spot and generate bill
+    cout << "\nReleasing spot and generating bill for TN01AA1234:" << endl;
+    double bill = parkingManager.releaseSpotAndBill("TN01AA1234");
+    cout << "Bill: $" << bill << endl;
+
+    // Print reserved spots after releasing
+    cout << "\nReserved spots details after releasing:" << endl;
+    parkingManager.printReservedSpotsDetails();
+
+    // Print unreserved spots for "TWO" wheeler after release
+    cout << "\nUnreserved spots for TWO wheeler after release:" << endl;
+    parkingManager.printUnreservedSpotNumber("TWO");
+
+    return 0;
+}
